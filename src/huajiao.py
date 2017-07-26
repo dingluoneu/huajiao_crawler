@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from urllib.error import HTTPError
 import urllib.request
 import time
 
@@ -17,6 +18,7 @@ class User:
     __user_id = ""
     __user_name = ""
     __location = ""
+    __signature = ""
     __live_level = 0
     __self_level = 0
     __tags = []
@@ -26,10 +28,11 @@ class User:
     __gift_sent = 0
     __rank_list = {}
 
-    def __init__(self, user_id, user_name, location, l_level, s_level, tags, followers_count, like, gift_r, gift_s, rank_list):
+    def __init__(self, user_id, user_name, location, signature, l_level, s_level, tags, followers_count, like, gift_r, gift_s, rank_list):
         self.__user_id = user_id
         self.__user_name = user_name
         self.__location = location
+        self.__signature = signature
         self.__live_level = l_level
         self.__self_level = s_level
         self.__tags = tags
@@ -47,6 +50,9 @@ class User:
 
     def get_location(self):
         return self.__location
+
+    def get_signature(self):
+        return self.__signature
 
     def get_live_level(self):
         return self.__live_level
@@ -96,7 +102,6 @@ class TopFollower:
 
     def get_gift_no(self):
         return self.__gift_no
-
 
 
 def scroll_down(browser, number_of_scroll_down):
@@ -192,3 +197,77 @@ def extract_user_id_from_ranklist_url(url):
         if url[i].isdigit():
             res += url[i]
     return res
+
+
+def process_live_data(s):
+    if s is None or len(s) < 2:
+        return s
+
+    res = ""
+    if s[-1] == "万":
+        res = s[0: len(s) - 1] + "0000"
+    return res
+
+
+def parse_user_info_page(user_info_page_url):
+    global headers, user_id, user_name, location, signature, live_level, self_level, followers_count, like_received, gift_received, gift_sent
+    request = urllib.request.Request(user_info_page_url, data=None, headers=headers)
+    try:
+        html = urlopen(request, timeout=20)
+    except HTTPError as e:
+        print(e)
+        return None
+
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+    except AttributeError as e:
+        print(e)
+        return None
+
+    info_nav = soup.find("div", {"class": "info-box"}).findAll("span")
+    if info_nav is not None:
+        user_name = info_nav[0].get_text()
+        user_id = info_nav[1].get_text()[4:]
+        location = info_nav[2].get_text()
+        # print(user_name, user_id, location)
+
+    level_nav = soup.find("div", {"class": "levels"}).findAll("span")
+    if level_nav is not None and len(level_nav) == 2:
+        live_level = int(level_nav[0].i.get_text())
+        self_level = int(level_nav[1].i.get_text())
+        # print(str(live_level) + " " + str(self_level))
+
+    signature_nav = soup.find("div", {"class": "info-box"}).find("p", {"class": "about"})
+    if signature_nav is not None:
+        signature = signature_nav.get_text()
+
+    tags_nav = soup.find("div", {"class": "info-box"}).find("p", {"class": "tags"}).findAll("span")
+    tags_list = []
+    if tags_nav is not None and len(tags_nav) > 0:
+        for item in tags_nav:
+            tag = item.get_text()
+            tags_list.append(tag)
+        # print(tags_list)
+
+    live_data_nav = soup.find("ul", {"class": "clearfix"}).findAll("li")
+    if live_data_nav is not None and len(live_data_nav) == 4:
+        followers_count_nav = live_data_nav[0].h4
+        followers_count = followers_count_nav.get_text().strip()
+        followers_count = int(process_live_data(followers_count))
+
+        like_received_nav = live_data_nav[1].h4
+        like_received = like_received_nav.get_text().strip()
+        like_received = int(process_live_data(like_received))
+
+        gift_received_nav = live_data_nav[2].h4
+        gift_received = gift_received_nav.get_text().strip()
+        gift_received = int(process_live_data(gift_received))
+
+        gift_sent_nav = live_data_nav[3].h4
+        gift_sent = gift_sent_nav.get_text().strip()
+        gift_sent = int(process_live_data(gift_sent))
+
+    rank_list = parse_user_ranklist(user_info_page_url)
+    user = User(user_id, user_name, location, signature, live_level, self_level, tags_list, followers_count, like_received, gift_received, gift_sent, rank_list)
+    return user
+
