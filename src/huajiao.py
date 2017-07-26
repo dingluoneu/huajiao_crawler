@@ -44,7 +44,7 @@ def scroll_down(browser, number_of_scroll_down):
     return browser
 
 
-def parse_live_id(url):
+def parse_live_url(url):
     """
     Fetches live_id from www.huajiao.com popular rank list
     :param url: "http://www.huajiao.com/category/1000"
@@ -110,9 +110,6 @@ def extract_user_id_from_ranklist_url(url):
         if url[i].isdigit():
             res += url[i]
     return res
-
-
-
 
 
 
