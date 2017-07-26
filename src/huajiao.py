@@ -13,6 +13,66 @@ headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KH
    'Connection': 'keep-alive'}
 
 
+class User:
+    __user_id = ""
+    __user_name = ""
+    __location = ""
+    __live_level = 0
+    __self_level = 0
+    __tags = []
+    __followers_count = 0
+    __like_received = 0
+    __gift_received = 0
+    __gift_sent = 0
+    __rank_list = {}
+
+    def __init__(self, user_id, user_name, location, l_level, s_level, tags, followers_count, like, gift_r, gift_s, rank_list):
+        self.__user_id = user_id
+        self.__user_name = user_name
+        self.__location = location
+        self.__live_level = l_level
+        self.__self_level = s_level
+        self.__tags = tags
+        self.__followers_count = followers_count
+        self.__like_received = like
+        self.__gift_received = gift_r
+        self.__gift_sent = gift_s
+        self.__rank_list = rank_list
+
+    def get_user_id(self):
+        return self.__user_id
+
+    def get_user_name(self):
+        return self.__user_name
+
+    def get_location(self):
+        return self.__location
+
+    def get_live_level(self):
+        return self.__live_level
+
+    def get_self_level(self):
+        return self.__self_level
+
+    def get_tags(self):
+        return self.__tags
+
+    def get_followers_count(self):
+        return self.__followers_count
+
+    def get_like_received(self):
+        return self.__like_received
+
+    def get_gift_received(self):
+        return self.__gift_received
+
+    def get_gift_sent(self):
+        return self.__gift_sent
+
+    def get_rank_list(self):
+        return self.__rank_list
+
+
 class TopFollower:
     __rank = 0
     __user_name = ""
@@ -132,6 +192,3 @@ def extract_user_id_from_ranklist_url(url):
         if url[i].isdigit():
             res += url[i]
     return res
-
-
-
