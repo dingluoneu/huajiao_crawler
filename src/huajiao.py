@@ -1,6 +1,16 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+import urllib.request
 import time
+
+headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+   'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+   'Accept-Encoding': 'none',
+   'Accept-Language': 'en-US,en;q=0.8',
+   'Connection': 'keep-alive'}
 
 
 class TopFollower:
@@ -99,6 +109,18 @@ def parse_user_ranklist(user_info_page_url):
     return rank_list
 
 
+def parse_user_info_page_from_live_url(live_url):
+    global headers
+    request = urllib.request.Request(live_url, data=None, headers=headers)
+    html = urlopen(request, timeout=10)
+    soup = BeautifulSoup(html, "html.parser")
+    a_nav = soup.find("a", {"class": "js-ulink js-nickname link"})
+    user_info_page_url = ""
+    if a_nav is not None:
+        user_info_page_url = "http://www.huajiao.com" + a_nav["href"]
+    else:
+        print("a_nav is None!")
+    return user_info_page_url
 
 
 def extract_user_id_from_ranklist_url(url):
